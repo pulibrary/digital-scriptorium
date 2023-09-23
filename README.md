@@ -11,9 +11,8 @@ For things that have MMSIDs
    - Admin > Run a Job
    - Export Bibliographic Records > [select set]
    - Job Report > Link to records > download
-5. Run XQuery over publishing export
-6. Get call numbers from Analytics
+4. Get call numbers from Analytics
    - Analytics > Access Analytics > Create > Analysis
    - Physical Items: Bibliographic Details > MMSID, Holding Details > Permanent Call Number
-7. Combine CSV created from XQuery with Call numbers from Analytics
-8. Run shell script to add Figgy manifests
+   - download as CSV
+5. Run shell script to add Figgy manifests to CSV
