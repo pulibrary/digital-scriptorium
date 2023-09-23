@@ -13,7 +13,7 @@ For things that have MMSIDs
    - Job Report > Link to records > download
 4. Get call numbers from Analytics
    - Analytics > Access Analytics > Create > Analysis
-   - Physical Items: Bibliographic Details > MMSID, Holding Details > Permanent Call Number
+   - Physical Items: Holding Details > Permanent Call Number, Bibliographic Details > MMSID; filter by MMSID
    - download as CSV
 5. Run shell script to add Figgy manifests to CSV
    - `bash get-manifest-from-MMSID.sh input_file output_file`
