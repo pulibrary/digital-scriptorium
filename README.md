@@ -4,7 +4,7 @@ Tools for contributing PUL records to DS
 ## Alma workflow
 For things that have MMSIDs
 1. Create a set via search
-   - Resources > Manage Sets > Create Set
+   - Admin > Manage Sets > Create Set
    - All Titles > Itemized > From File
    - Content > Export list
 3. Run export job over set
