@@ -16,4 +16,5 @@ For things that have MMSIDs
    - Physical Items: Holding Details > Permanent Call Number, Bibliographic Details > MMSID; filter by MMSID
    - download as CSV
 5. Run shell script to add Figgy manifests to CSV
+   - prep the file: remove or escape commas; add a dummy header in the 4th column to force a blank third colum)
    - `bash get-manifest-from-MMSID.sh input_file output_file`
