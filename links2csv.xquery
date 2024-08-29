@@ -1,6 +1,7 @@
 xquery version "3.0";
 
 (:create a manifest mapping 001 and 035 to 856$u :)
+(: superseded by shell script to get manifest from figgy:)
 
 declare variable $collection as document-node()* := doc("file:/Users/heberleinr/Documents/Digital%20Scriptorium/submissions/2023-07/BIBLIOGRAPHIC_28080329690006421_1.xml");
 
