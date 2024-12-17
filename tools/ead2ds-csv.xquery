@@ -21,10 +21,10 @@ README
 
 declare function local:format-for-csv($input) {
   for $i in $input
-  return '"' || replace(string($i), '"', '""') || '"'
+  return fn:escape-html-uri('"' || replace(string($i), '"', '""') || '"')
 };
 
-declare variable $ead as document-node()+ := doc("file:/Users/heberleinr/Documents/Digital_Scriptorium/submissions/2024_08/Islamic_II/Hadith/C1771_20241217_135927_UTC__ead.xml");
+declare variable $ead as document-node()+ := doc("file:/Users/heberleinr/Documents/Digital_Scriptorium/C0776_20241216_214730_UTC__ead.xml");
 let $manuscripts := $ead//c[@level = "item"]
 let $csv := 
 <csv>{
@@ -36,133 +36,165 @@ let $csv :=
 	(:hardcoding this because descrules is discursive, does that fly?:)
 	let $cataloging-convention := "dacs"
 	let $holding_institution_ds_qid := ""
-	let $holding_institution_as_recorded := $mss/ancestor::archdesc/did/origination/corpname[@role = "col"]/text()
+	let $holding_institution_as_recorded := 
+		if ($mss/ancestor::archdesc/did/origination/corpname[@role = "col"])
+		then $mss/ancestor::archdesc/did/origination/corpname[@role = "col"]/text()
+		else ""
 	(:logic: check for a unitid that's not the aspace uri, else take the component id:)
-	let $holding_institution_id_number := if ($mss/did/unitid[not(@type = "aspace_uri")][count(.) = 1])
-	then
-		$mss/did/unitid[not(@type = "aspace_uri")]/text()
-	else
-		if ($mss/did/unitid[not(@type = "aspace_uri")][count(.) > 1])
+	let $holding_institution_id_number := 
+		if ($mss/did/unitid[not(@type = "aspace_uri")][count(.) = 1])
 		then
-			error(xs:QName('local:unitid_conflict'), "more than one unitid associated with this item, please pick one")
+			$mss/did/unitid[not(@type = "aspace_uri")]/text()
 		else
-			if ($mss/@id)
+			if ($mss/did/unitid[not(@type = "aspace_uri")][count(.) > 1])
 			then
-				$mss/data(@id)
+				error(xs:QName('local:unitid_conflict'), "more than one unitid associated with this item, please pick one")
 			else
-				$mss/ancestor::ead//eadid/text() || "_" || functx:index-of-node($mss/ancestor::dsc//c[@level = "item"], $mss)
+				if ($mss/@id)
+				then
+					$mss/data(@id)
+				else
+					$mss/ancestor::ead//eadid/text() || "_" || functx:index-of-node($mss/ancestor::dsc//c[@level = "item"], $mss)
 	let $holding_institution_shelfmark :=
-	if ($mss/did/container)
-	then
-		(for $container in $mss/did/container[1]
-		return
-			($container/@label || "_" || $container/@type || "_" || $container/text()))
-	else
-		""
-	let $link_to_holding_institution_record := $mss/ancestor::ead//eadid/data(@url)
+		if ($mss/did/container)
+		then
+			(for $container in $mss/did/container[1]
+			return
+				($container/@label || "_" || $container/@type || "_" || $container/text()))
+		else
+			""
+	let $link_to_holding_institution_record := 
+		if ($mss/ancestor::ead//eadid/@url)
+		then $mss/ancestor::ead//eadid/data(@url)
+		else ""
 	let $iiif_manifest :=
-	if (matches($mss/did/dao/@xlink:href, "manifest"))
-	then
-		$mss/did/dao/data(@xlink:href)
-	else
-		""
+		if (matches($mss/did/dao/@xlink:href, "manifest"))
+		then
+			$mss/did/dao/data(@xlink:href)
+		else
+			""
 		(:production place and date may be hard to extract as they'd most likely be subdivisions on a genreform term:)
 		(:trying my luck here with the first genreterm, if any:)
-	let $genreterm-prod := $mss/ancestor::archdesc/controlaccess/genreform[1]/text()
-	let $production_place_as_recorded := tokenize($genreterm-prod, '--')[2]
+	let $genreterm-prod := 
+		if ($mss/ancestor::archdesc/controlaccess/genreform)
+		then $mss/ancestor::archdesc/controlaccess/genreform[1]/text()
+		else ""
+	let $production_place_as_recorded := 
+		if ($genreterm-prod)
+		then tokenize($genreterm-prod, '--')[2]
+		else ""
 	let $production_place_ds_qid := ""
 	let $production_date_as_recorded :=
-	for $token at $pos in tokenize($genreterm-prod, '--')
-		where (matches($token, "^\d") or matches($token, "cent")) and $pos > 1
-	return
-		$token
+		if ($genreterm-prod)
+		then
+			for $token at $pos in tokenize($genreterm-prod, '--')
+				where (matches($token, "^\d") or matches($token, "cent")) and $pos > 1
+			return
+				$token
+		else ""
 	let $production_date := ""
 	let $century := ""
 	let $century_aat := ""
 	let $dated :=
-	if ($production_date_as_recorded = "")
-	then
-		"FALSE"
-	else
-		"TRUE"
+		if ($production_date_as_recorded = "")
+		then
+			"FALSE"
+		else
+			"TRUE"
 	let $title_as_recorded := $mss/did/unittitle/text()
 	let $title_as_recorded_agr := ""
 	let $uniform_title_as_recorded := ""
 	let $uniform_title_agr := ""
 	let $standard_title_ds_qid := ""
-	let $genre_as_recorded := tokenize($genreterm-prod, '--')[1]
+	let $genre_as_recorded := 
+		if ($genreterm-prod)
+		then tokenize($genreterm-prod, '--')[1]
+		else ""
 	let $genre_ds_qid := ""
 	(:should we exclude genreform here?:)
-	let $subjects :=
-	if ($mss/controlaccess)
-	then string-join($mss/controlaccess/*/text(), '|')
-	else string-join($mss/ancestor::archdesc/controlaccess/*/text(), '|')
-			(:would we ever expect a corpname here, e.g. a workshop?:)
-			(:also: assuming marc relator codes, is that sound?:)
+	let $subject_as_recorded :=
+		if ($mss/controlaccess)
+		then string-join($mss/controlaccess/*/text(), '|')
+		else string-join($mss/ancestor::archdesc/controlaccess/*/text(), '|')
+	(:would we ever expect a corpname here, e.g. a workshop?:)
+	(:also: assuming marc relator codes, is that sound?:)
+	let $subject_ds_qid := ""
 	let $author_as_recorded :=
-	if ($mss/did/origination)
-	then
-		for $name in $mss/did/origination/persname[matches(@role, "cre")]
-		return
-			$name/text()
-	else
-		""
+		if ($mss/did/origination/persname[matches(@role, "cre")])
+		then
+			for $name in $mss/did/origination/persname[matches(@role, "cre")]
+			return
+				$name/text()
+		else
+			""
 	let $author_as_recorded_agr := ""
 	let $author_ds_qid := ""
 	(:assuming marc relator codes, is that sound?:)
 	let $artist_as_recorded :=
-	if ($mss/did/origination)
-	then
-		for $name in $mss/did/origination/persname[matches(@role, "art|ill|ilu")]
-		return
-			$name/text()
-	else
-		""
+		if ($mss/did/origination/persname[matches(@role, "art|ill|ilu")])
+		then
+			for $name in $mss/did/origination/persname[matches(@role, "art|ill|ilu")]
+			return
+				$name/text()
+		else
+			""
 	let $artist_as_recorded_agr := ""
 	let $artist_ds_qid := ""
 	(:assuming marc relator codes, is that sound?:)
 	let $scribe_as_recorded :=
-	if ($mss/did/origination)
-	then
-		for $name in $mss/did/origination/persname[matches(@role, "scr")]
-		return
-			$name/text()
-	else
-		""
+		if ($mss/did/origination/persname[matches(@role, "scr")])
+		then
+			for $name in $mss/did/origination/persname[matches(@role, "scr")]
+			return
+				$name/text()
+		else
+			""
 	let $scribe_as_recorded_agr := ""
 	let $scribe_ds_qid := ""
 	(:assuming marc relator codes, is that sound?:)
 	let $associated_agent_as_recorded :=
-	if ($mss/did/origination)
-	then
-		for $name in $mss/did/origination/persname[matches(@role, "asn")]
-		return
-			$name/text()
-	else
-		""
+		if ($mss/did/origination/persname[matches(@role, "asn")])
+		then
+			for $name in $mss/did/origination/persname[matches(@role, "asn")]
+			return
+				$name/text()
+		else
+			""
 	let $associated_agent_as_recorded_agr := ""
 	let $associated_agent_ds_qid := ""
 	(:assuming marc relator codes, is that sound?:)
 	let $former_owner_as_recorded :=
-	if ($mss/did/origination)
-	then
-		for $name in $mss/did/origination/persname[matches(@role, "fmo")]
-		return
-			$name/text()
-	else
-		""
+		if ($mss/did/origination/persname[matches(@role, "fmo")])
+		then
+			for $name in $mss/did/origination/persname[matches(@role, "fmo")]
+			return
+				$name/text()
+		else
+			""
 	let $former_owner_as_recorded_agr := ""
 	let $former_owner_ds_qid := ""
 	(:we have a choice to grab the string value instead:)
-	let $language_as_recorded := string-join($mss/did/langmaterial/language/@langcode, ', ')
+	let $language_as_recorded := 
+		if ($mss/did/langmaterial/language/@langcode)
+		then string-join($mss/did/langmaterial/language/@langcode, ', ')
+		else ""
 	let $language_ds_qid := ""
 	(:could use sample data other than PUL's here; not sure where this could be recorded in structured form, if anywhere (we have it in a note):)
 	let $material_as_recorded := ""
 	let $material_ds_qid := ""
-	let $physical_description := normalize-space($mss/did/physdesc/extent/text()) || normalize-space($mss/did/physdesc/dimensions/text()) || normalize-space($mss/did/physdesc/physfacet/text())
-	let $note := $mss/scopecontent/*[not(self::head)]/normalize-space(.)
+	let $physical_description := 
+		if ($mss/did/physdesc/*)
+		then normalize-space($mss/did/physdesc/extent/text()) || normalize-space($mss/did/physdesc/dimensions/text()) || normalize-space($mss/did/physdesc/physfacet/text())
+		else ""
+	let $note := 
+		if ($mss/scopecontent)
+		then normalize-space(string-join($mss/scopecontent/*[not(self::head)]/text(), ' '))
+		else ""
 	(:this field only exists in the titlestmt of the collection-level record:)
-	let $acknowledgments := $mss/ancestor::ead/eadheader//sponsor/text()
+	let $acknowledgments := 
+		if ($mss//ancestor::ead/eadheader//sponsor)
+		then $mss/ancestor::ead/eadheader//sponsor/text()
+		else ""
 	let $data_processed_at := current-dateTime()
 	(:not sure what goes here:)
 	let $data_source_modified := ""
@@ -196,7 +228,8 @@ let $csv :=
 		$standard_title_ds_qid,
 		$genre_as_recorded,
 		$genre_ds_qid,
-		$subjects,
+		$subject_as_recorded,
+		$subject_ds_qid,
 		$author_as_recorded,
 		$author_as_recorded_agr,
 		$author_ds_qid,
@@ -226,6 +259,7 @@ let $csv :=
 }</csv>
 
 let $csv := document{$csv/text()}
-
 return
-put($csv, "csv2ead.csv")
+(
+put($csv, "csv2ds.csv")
+)
