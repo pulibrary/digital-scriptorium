@@ -28,6 +28,8 @@ declare variable $ead as document-node()+ := doc("file:/Users/heberleinr/Documen
 let $manuscripts := $ead//c[@level = "item"]
 let $csv := 
 <csv>{
+	('"ds_id","date_added","date_last_updated","source_type","cataloging_convention","holding_institution_ds_qid","holding_institution_as_recorded","holding_institution_id_number","holding_institution_shelfmark","link_to_holding_institution_record","iiif_manifest","production_place_as_recorded","production_place_ds_qid","production_date_as_recorded","production_date","century","century_aat","dated","title_as_recorded","title_as_recorded_agr","uniform_title_as_recorded","uniform_title_agr","standard_title_ds_qid","genre_as_recorded","genre_ds_qid","subject_as_recorded","subject_ds_qid","author_as_recorded","author_as_recorded_agr","author_ds_qid","artist_as_recorded","artist_as_recorded_agr","artist_ds_qid","scribe_as_recorded","scribe_as_recorded_agr","scribe_ds_qid","associated_agent_as_recorded","associated_agent_as_recorded_agr","associated_agent_ds_qid","former_owner_as_recorded","former_owner_as_recorded_agr","former_owner_ds_qid","language_as_recorded","language_ds_qid","material_as_recorded","material_ds_qid","physical_description","note","acknowledgments","data_processed_at","data_source_modified","source_file"'),
+
 	for $mss in $manuscripts
 	let $ds_id := ""
 	let $date_added := current-date()
