@@ -122,9 +122,18 @@ use cases
 1423-25; 1457-60
 :)			else ""
 
-	let $production_date_start := ""
-	let $production_date_end := ""
-	let $dated := ""
+	let $production_date_start := 
+		if ($production_date_as_recorded[not(.="")])
+		then replace($production_date_as_recorded, "(^\d{4})(.*)", "$1")
+		else ""
+	let $production_date_end := 
+		if ($production_date_as_recorded[not(.="")])
+		then replace($production_date_as_recorded, "(.*?)(\d{4}$)", "$2")
+		else ""
+	let $dated := 
+		if ($production_date_as_recorded[not(.="")])
+		then "TRUE"
+		else "FALSE"
 	let $title_as_recorded := $unittitle
 	let $uniform_title_as_recorded := ""
 	let $subject_as_recorded :=
