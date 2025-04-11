@@ -119,21 +119,21 @@ use cases
 1377-1391; 1395; 1397-1399 - ok
 1343-1344; 1346-1350; 1357 - ok
 1335-1338; 1341-1342; 1345; 1347-1349 - ok
-1423-25; 1457-60 - ok
+1423-25; 1457-60
 :)			else ""
 
 	let $production_date_start := 
-		if ($production_date_as_recorded[not(.="")])
+		if ($production_date_as_recorded[not(.="" or matches(., "undated", "i"))])
 		then replace($production_date_as_recorded, "(^\d{4})(.*)", "$1")
 		else ""
 	let $production_date_end := 
-		if ($production_date_as_recorded[not(.="")])
+		if ($production_date_as_recorded[not(.="" or matches(., "undated", "i"))])
 		then replace($production_date_as_recorded, "(.*?)(\d{4}$)", "$2")
 		else ""
 	let $dated := 
-		if ($production_date_as_recorded[not(.="")])
-		then "TRUE"
-		else "FALSE"
+		if ($production_date_as_recorded[.="" or matches(., "undated", "i")])
+		then "FALSE"
+		else "TRUE"
 	let $title_as_recorded := $unittitle
 	let $uniform_title_as_recorded := ""
 	let $subject_as_recorded :=
