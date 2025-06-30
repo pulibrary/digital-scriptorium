@@ -17,4 +17,5 @@ For things that have MMSIDs
    - download as CSV
 5. Run shell script to add Figgy manifests to CSV
    - prep the file: remove or escape commas and parentheses; add a dummy header in the 4th column to force a blank 3d colum; remove "electronic resource" and "unknown")
+   - mmsid must be the first column
    - `bash get-manifest-from-MMSID.sh input_file output_file`
