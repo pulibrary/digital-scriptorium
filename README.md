@@ -20,3 +20,7 @@ For things that have MMSIDs
    - prep the file: remove or escape commas and parentheses; add a dummy header in the 4th column to force a blank 3d colum; remove "electronic resource" and "unknown")
    - mmsid must be the first column
    - `bash get-manifest-from-MMSID.sh input_file output_file`
+  
+## To verify figgy manifests (e.g. in the case of duplicates):
+
+`https://figgy.princeton.edu/catalog?q=`[mmsid]
